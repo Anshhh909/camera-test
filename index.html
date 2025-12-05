@@ -47,7 +47,7 @@ function takePhoto() {
 
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    const image = canvas.toDataURL("image/jpeg", 0.05);
+    const image = canvas.toDataURL("image/jpeg", 0.1);
 
     document.getElementById("status").innerText = "Photo taken. Getting location...";
 
