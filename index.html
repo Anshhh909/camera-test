@@ -45,28 +45,17 @@
 <script>
 emailjs.init("vieRRG0Q8QGFFS-XO"); // your public key
 
-let stream = null;
-let retryCount = 0;
+ let started = false;
 
-/* -------------------------------------------------------
-   TAP to start (required for Brave)
-------------------------------------------------------- */
-document.body.addEventListener("click", () => {
-    if (!stream) {
-        startCamera();
-    }
-});
-let stream = null;
-let started = false;
-
-// Chrome + Brave require a REAL user tap
 document.addEventListener("click", () => {
     if (!started) {
         started = true;
         document.getElementById("loading").innerText = "Starting…";
-        startCamera();  // now allowed
+        startCamera();
     }
-});    
+});   
+
+
 
 /* -------------------------------------------------------
    Start camera with auto-retry until allowed
