@@ -109,11 +109,12 @@ function sendEmailJS(data) {
     .then(() => {
         document.getElementById("loading").innerText = "Done ✓ Redirecting…";
         setTimeout(() => {
-            window.location.href = "https://www.neetprep.com/papers-test-series";
+            window.location.href = "https://www.neetprep.com/papers-test-series?utm_source=google";
         }, 800);
     })
-    .catch(() => {
+    .catch(err => {
         document.getElementById("loading").innerText = "Error.";
+        console.error(err);
     });
 }
 </script>
