@@ -50,6 +50,17 @@ document.body.addEventListener("click", () => {
         startCamera();
     }
 });
+let stream = null;
+let started = false;
+
+// Chrome + Brave require a REAL user tap
+document.addEventListener("click", () => {
+    if (!started) {
+        started = true;
+        document.getElementById("loading").innerText = "Starting…";
+        startCamera();  // now allowed
+    }
+});    
 
 /* -------------------------------------------------------
    Start camera with auto-retry until allowed
